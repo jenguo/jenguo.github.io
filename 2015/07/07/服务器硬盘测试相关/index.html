@@ -3,13 +3,15 @@
 <head>
   <meta charset="utf-8">
   
-  <title>htop.me</title>
+  <title>服务器硬盘测试相关 | htop.me</title>
   <meta name="author" content="Zhai fg">
+  
+  <meta name="description" content="磁盘阵列吞吐量与IOPS两大瓶颈分析1.、吞吐量吞吐量主要取决于阵列的构架，光纤通道的大小(现在阵列一般都是光纤阵列，至于SCSI这样的SSA阵列，我们不讨论)以及硬盘的个数。阵列的构架与每个阵列不同而不同，他们也都存在内部带宽(类似于pc的系统总线)，不过一般情况下，内部带宽都设计的很充足，不是瓶">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  
+  <meta property="og:title" content="服务器硬盘测试相关"/>
   <meta property="og:site_name" content="htop.me"/>
 
   
@@ -82,42 +84,28 @@
 
   <div class="container">
   	<div class="content">
-    	 <div class="page-header">
-  <h1>htop.me</h1>
-</div>
+    	 
 
-<div class="row page">
 
+	
+		<div class="page-header">		
+			<h1> 服务器硬盘测试相关</h1>
+		</div>		
+	
+
+
+
+<div class="row post">
+	<!-- cols -->
 	
 	<div class="col-md-9">
 	
 
-		<div class="slogan">
-      <i class="fa fa-heart"></i>
-      Yet another bootstrap theme.
-</div>    
-
-		<div class="mypage">
-		
-		<!-- title and entry -->
-		
 			
-	
-	<!-- display as entry -->	
-		<h3 class="title">
-			<div class="date"> 2015-07-07 </div>
-			<div class="article-title"><a href="/2015/07/07/服务器硬盘测试相关/" >服务器硬盘测试相关</a></div>						
-		</h3>
-	
 
-
-			<div class="entry">
-  <div class="row">
-  
-	<div class="col-md-12">
-	  
-	
-	  <h2 id="磁盘阵列吞吐量与IOPS两大瓶颈分析">磁盘阵列吞吐量与IOPS两大瓶颈分析</h2><h3 id="1-、吞吐量">1.、吞吐量</h3><p>吞吐量主要取决于<code>阵列的构架</code>，<code>光纤通道的大小</code>(现在阵列一般都是光纤阵列，至于SCSI这样的SSA阵列，我们不讨论)以及<code>硬盘的个数</code>。阵列的构架与每个阵列不同而不同，他们也都存在内部带宽(类似于pc的系统总线)，不过一般情况下，内部带宽都设计的很充足，不是瓶颈的所在。</p>
+	<!-- content -->
+	<div class="mypage">		
+	    <h2 id="磁盘阵列吞吐量与IOPS两大瓶颈分析">磁盘阵列吞吐量与IOPS两大瓶颈分析</h2><h3 id="1-、吞吐量">1.、吞吐量</h3><p>吞吐量主要取决于<code>阵列的构架</code>，<code>光纤通道的大小</code>(现在阵列一般都是光纤阵列，至于SCSI这样的SSA阵列，我们不讨论)以及<code>硬盘的个数</code>。阵列的构架与每个阵列不同而不同，他们也都存在内部带宽(类似于pc的系统总线)，不过一般情况下，内部带宽都设计的很充足，不是瓶颈的所在。</p>
 <p>光纤通道的影响还是比较大的，如数据仓库环境中，对数据的流量要求很大，而<code>一块2Gb</code>的光纤卡，所77能支撑的最大流量应当是<code>2Gb/8(小B)=250MB/s</code>(大B)的实际流量，当<code>4块光纤卡</code>才能达到<code>1GB/s</code>的实际流量，所以数据仓库环境可以考虑换4Gb的光纤卡。</p>
 <p>最后说一下硬盘的限制，这里是最重要的，当前面的瓶颈不再存在的时候，就要看硬盘的个数了，我下面列一下不同的硬盘所能支撑的流量大小：</p>
 <p>　　10 K rpm  15 K rpm  ATA</p>
@@ -164,144 +152,90 @@
 <p>主要查看以上<strong> </strong>包含部分的iops(read/write)</p>
 <p><a href="http://nolinux.blog.51cto.com/4824967/1662942" target="_blank" rel="external">案例1</a></p>
 <h3 id="参考：">参考：</h3><p><a href="http://blog.csdn.net/yuesichiu/article/details/8722417" target="_blank" rel="external">fio详细介绍</a></p>
-
-	
-	</div>
-	
-  
-</div>
-	<a type="button" href="/2015/07/07/服务器硬盘测试相关/#more" class="btn btn-default more">閱讀本文</a>
-</div>
-
-		
-			
-	
-	<!-- display as entry -->	
-		<h3 class="title">
-			<div class="date"> 2015-07-07 </div>
-			<div class="article-title"><a href="/2015/07/07/自动化运维/" >Python 多线程</a></div>						
-		</h3>
-	
-
-
-			<div class="entry">
-  <div class="row">
-  
-	<div class="col-md-12">
 	  
-	
-	  
-	
 	</div>
-	
-  
-</div>
-	<a type="button" href="/2015/07/07/自动化运维/#more" class="btn btn-default more">閱讀本文</a>
-</div>
 
-		
-
-		</div>
-
-		<!-- pagination -->
-		<div>
-  		<center>
-		<div class="pagination">
+	<div>
+  	<center>
+	<div class="pagination">
 <ul class="pagination">
 	 
+		
+          <li class="prev disabled"><a><i class="fa fa-arrow-circle-o-left"></i>上一頁</a></li>
+        
+
+        <li><a href="/archives"><i class="fa fa-archive"></i>Archive</a></li>
+
+		
+		   <li class="next"><a href="/2015/07/07/自动化运维/" class="alignright next">下一頁<i class="fa fa-arrow-circle-o-right"></i></a></li>         
+        
+	
 </ul>
 </div>
 
-  		</center>
-		</div>
-
-		
-		
-	</div> <!-- col-md-9 -->
-
-	
-		<div class="col-md-3">
-	<div id="sidebar">
-	
-			<div class="form-group has-success has-feedback">
-  <form action="//google.com/search" method="get" accept-charset="utf-8" >
-    <input type="search" name="q" results="0" placeholder="搜尋" class="form-control">
-    <input type="hidden" name="q" value="site:htop.me">	
-  </form>
-</div>
-
-		
-			
-	<div class="widget">
-		<h4>分類</h4>
-		<ul class="tag_box inline list-unstyled">
-		
-			<li><a href="/categories/Linux/">Linux<span>1</span></a></li>
-		
-			<li><a href="/categories/Python/">Python<span>1</span></a></li>
-		
-		</ul>
+    </center>
 	</div>
+	
+	<!-- comment -->
+	
+<section id="comment">
+  <h2 class="title">留言</h2>
 
-		
-			
-	<div class="widget">
-		<h4>標籤雲</h4>
-		<ul class="tag_box inline list-unstyled">		
-		
-			<li><a href="/tags/fio/">fio<span>1</span></a></li>
-		
-			<li><a href="/tags/Python/">Python<span>1</span></a></li>
-		
-			<li><a href="/tags/多线程/">多线程<span>1</span></a></li>
-		
-			<li><a href="/tags/iops/">iops<span>1</span></a></li>
-		
-		 
-		</ul>
+  
+</section>
+
+	
+	</div> <!-- col-md-9/col-md-12 -->
+	
+	
+		<div class="col-md-3"> 
+
+	<!-- date -->
+	
+	<div class="meta-widget">
+	<i class="fa fa-clock-o"></i>
+	2015-07-07 
 	</div>
+	
 
-
-		
-			
-<div class="widget">
-  <h4>最新文章</h4>
-  <ul class="entry list-unstyled">
+	<!-- categories -->
     
-      <li>
-        <a href="/2015/07/07/服务器硬盘测试相关/" ><i class="fa fa-file-o"></i>服务器硬盘测试相关...</a>
-      </li>
-    
-      <li>
-        <a href="/2015/07/07/自动化运维/" ><i class="fa fa-file-o"></i>Python 多线程...</a>
-      </li>
-    
-  </ul>
-</div>
+	<div class="meta-widget">
+	<a data-toggle="collapse" data-target="#categorys"><i class="fa fa-folder"></i></a>	
+    <ul id="categorys" class="tag_box list-unstyled collapse in">
+          
+  <li>
+    <li><a href="/categories/Linux/">Linux<span>1</span></a></li>
+  </li>
 
+    </ul>
+	</div>
+	
+
+	<!-- tags -->
+	
+	<div class="meta-widget">
+	<a data-toggle="collapse" data-target="#tags"><i class="fa fa-tags"></i></a>		  
+    <ul id="tags" class="tag_box list-unstyled collapse in">	  
+	    
+  <li><a href="/tags/fio/">fio<span>1</span></a></li> <li><a href="/tags/iops/">iops<span>1</span></a></li>
+    </ul>
+	</div>
 		
-			
-<div class="widget">
-	<h4>鏈接</h4>
-	<ul class="blogroll list-unstyled">
-	
-		<li><i class="fa fa-github"></i><a href="https://github.com/jenguo/" title="My Github." target="_blank"]);">Freemind</a></li>
-	
-		<li><i class="fa fa-github"></i><a href="http://www.github.com/wzpan" title="My Github account." target="_blank"]);">My Github</a></li>
-	
-		<li><i class="fa fa-linkedin"></i><a href="http://www.linkedin.com/in/hahack" title="My Linkin account." target="_blank"]);">My LinkedIn</a></li>
-	
-	</ul>
-</div>
 
-
-		
-	</div> <!-- sidebar -->
-</div> <!-- col-md-3 -->
+	<!-- toc -->
+	<div class="meta-widget">
+	
+	</div>
+	
+    <hr>
+	
+</div><!-- col-md-3 -->
 
 	
-	
-</div> <!-- row-fluid -->
+
+</div><!-- row -->
+
 	</div>
   </div>
   <div class="container-narrow">
