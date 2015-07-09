@@ -3,13 +3,25 @@
 <head>
   <meta charset="utf-8">
   
-  <title>htop.me</title>
+  <title>rewrite简明教程 | htop.me</title>
   <meta name="author" content="Zhaifg">
+  
+  <meta name="description" content="Nginx rewrite基本语法 Nginx的rewrite语法其实很简单.用到的指令无非是这几个:
+
+set
+if
+return
+break
+rewrite
+
+只是简单的几个指令却可以做出绝对不输apache的简单灵活的配置.
+　 1. set set主要是用来设置变量用的,没什么特别的
+2. ">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  
+  <meta property="og:title" content="rewrite简明教程"/>
   <meta property="og:site_name" content="htop.me"/>
 
   
@@ -92,42 +104,28 @@ var _hmt = _hmt || [];
 
   <div class="container">
   	<div class="content">
-    	 <div class="page-header">
-  <h1>htop.me</h1>
-</div>
+    	 
 
-<div class="row page">
 
+	
+		<div class="page-header">		
+			<h1> rewrite简明教程</h1>
+		</div>		
+	
+
+
+
+<div class="row post">
+	<!-- cols -->
 	
 	<div class="col-md-9">
 	
 
-		<div class="slogan">
-      <i class="fa fa-heart"></i>
-      少年易学老难成，一寸光阴不可轻。
-</div>    
-
-		<div class="mypage">
-		
-		<!-- title and entry -->
-		
 			
-	
-	<!-- display as entry -->	
-		<h3 class="title">
-			<div class="date"> 2015-07-10 </div>
-			<div class="article-title"><a href="/2015/07/10/rewrite简明教程/" >rewrite简明教程</a></div>						
-		</h3>
-	
 
-
-			<div class="entry">
-  <div class="row">
-  
-	<div class="col-md-12">
-	  
-	
-	  <h2 id="Nginx_rewrite基本语法">Nginx rewrite基本语法</h2><p> Nginx的rewrite语法其实很简单.用到的指令无非是这几个:</p>
+	<!-- content -->
+	<div class="mypage">		
+	    <h2 id="Nginx_rewrite基本语法">Nginx rewrite基本语法</h2><p> Nginx的rewrite语法其实很简单.用到的指令无非是这几个:</p>
 <ul>
 <li><strong>set</strong></li>
 <li><strong>if</strong></li>
@@ -288,221 +286,101 @@ var _hmt = _hmt || [];
 <p>访问 /documents/document.html 会使用配置B -&gt; 匹配常量B,不匹配正则C和D,所以用B</p>
 <p>访问 /images/1.gif 会使用配置C -&gt; 匹配常量B,匹配正则C,使用首个命中的正则,所以用C</p>
 <p>访问 /documents/1.jpg 会使用配置D -&gt; 匹配常量B,不匹配正则C,匹配正则D,使用首个命中的正则,所以用D</p>
-
-	
-	</div>
-	
-  
-</div>
-	<a type="button" href="/2015/07/10/rewrite简明教程/#more" class="btn btn-default more">阅读此文</a>
-</div>
-
-		
-			
-	
-	<!-- display as entry -->	
-		<h3 class="title">
-			<div class="date"> 2015-07-07 </div>
-			<div class="article-title"><a href="/2015/07/07/服务器硬盘测试相关/" >服务器硬盘测试相关</a></div>						
-		</h3>
-	
-
-
-			<div class="entry">
-  <div class="row">
-  
-	<div class="col-md-12">
 	  
-	
-	  <h2 id="磁盘阵列吞吐量与IOPS两大瓶颈分析">磁盘阵列吞吐量与IOPS两大瓶颈分析</h2><h3 id="1-、吞吐量">1.、吞吐量</h3><p>吞吐量主要取决于<code>阵列的构架</code>，<code>光纤通道的大小</code>(现在阵列一般都是光纤阵列，至于SCSI这样的SSA阵列，我们不讨论)以及<code>硬盘的个数</code>。阵列的构架与每个阵列不同而不同，他们也都存在内部带宽(类似于pc的系统总线)，不过一般情况下，内部带宽都设计的很充足，不是瓶颈的所在。</p>
-<p>光纤通道的影响还是比较大的，如数据仓库环境中，对数据的流量要求很大，而<code>一块2Gb</code>的光纤卡，所77能支撑的最大流量应当是<code>2Gb/8(小B)=250MB/s</code>(大B)的实际流量，当<code>4块光纤卡</code>才能达到<code>1GB/s</code>的实际流量，所以数据仓库环境可以考虑换4Gb的光纤卡。</p>
-<p>最后说一下硬盘的限制，这里是最重要的，当前面的瓶颈不再存在的时候，就要看硬盘的个数了，我下面列一下不同的硬盘所能支撑的流量大小：</p>
-<p>　　10 K rpm  15 K rpm  ATA</p>
-<p>　　——— ——— ———</p>
-<p>　　10M/s 13M/s 8M/s</p>
-<p>那么，假定一个阵列有120块15K rpm的光纤硬盘，那么硬盘上最大的可以支撑的流量为<code>120*13=1560MB/s</code>，如果是<code>2Gb</code>的光纤卡，可能需要<code>6块才能够</code>，而<code>4Gb的光纤卡，3-4块就够了</code>。</p>
-<h3 id="2、IOPS">2、IOPS</h3><p>决定IOPS的主要取决与阵列的算法，<code>cache命中率</code>，以及<code>磁盘个数</code>。阵列的算法因为不同的阵列不同而不同，如我们最近遇到在hds usp上面，可能因为ldev(lun)存在队列或者资源限制，而单个ldev的iops就上不去，所以，在使用这个存储之前，有必要了解这个存储的一些算法规则与限制。</p>
-<p>cache的命中率取决于数据的分布，cache size的大小，数据访问的规则，以及cache的算法，如果完整的讨论下来，这里将变得很复杂，可以有一天好讨论了。我这里只强调一个cache的命中率，如果一个阵列，读cache的命中率越高越好，一般表示它可以支持更多的IOPS，为什么这么说呢?这个就与我们下面要讨论的硬盘IOPS有关系了。</p>
-<p>　　硬盘的限制，每个物理硬盘能处理的<code>IOPS</code>是有限制的，如</p>
-<p>　　10K rpm 15K rpm   ATA</p>
-<p>　　——— ——— ———</p>
-<p>　　100 150 50</p>
-<p>同样，如果一个阵列有120块15K rpm的光纤硬盘，那么，它能撑的最大<code>IOPS为120*150=18000</code>，这个为硬件限制的理论值，如果超过这个值，硬盘的响应可能会变的非常缓慢而不能正常提供业务。</p>
-<p>在<code>raid5</code>与<code>raid10</code>上，<code>读iops没有差别</code>，但是，相同的<code>业务写iops</code>，最终落在磁盘上的iops是有差别的，而我们<code>评估的却正是磁盘的IOPS</code>，如果达到了磁盘的限制，性能肯定是上不去了。</p>
-<p>那我们假定一个case，业务的<code>iops是10000</code>，<code>读cache命中率是30%</code>，<code>读iops为60%</code>，<code>写iops为40%</code>，<code>磁盘个数为120</code>，那么分别计算在raid5与raid10的情况下，每个磁盘的iops为多少。</p>
-<p>　　raid5:</p>
-<p>　　单块盘的<code>iops = (10000*(1-0.3)*0.6 + 4 * (10000*0.4))/120</code></p>
-<p>　　= (4200 + 16000)/120</p>
-<p>　　= 168</p>
-<p>这里的<code>10000*(1-0.3)*0.6</code>表示是<code>读的iops</code>，<code>比例是0.6</code>，<code>除掉cache命中</code>，实际只有<code>4200个iops</code>而<code>4 * (10000*0.4)</code> 表示<code>写的iops</code>，因为每一个写，在raid5中，实际发生了<code>4个io，所以写的iops为16000个</code><br>为了考虑raid5在写操作的时候，那2个读操作也可能发生命中，所以更精确的计算为：<br>　　单块盘的<code>iops = (10000*(1-0.3)*0.6 + 2 * (10000*0.4)*(1-0.3) + 2 * (10000*0.4))/120</code></p>
-<p>　　= (4200 + 5600 + 8000)/120</p>
-<p>　　= 148</p>
-<p>计算出来单个盘的<code>iops为148个</code>，基本达到磁盘极限</p>
-<p>raid10</p>
-<p>　　单块盘的<code>iops = (10000*(1-0.3)*0.6 + 2 * (10000*0.4))/120</code></p>
-<p>　　= (4200 + 8000)/120</p>
-<p>　　= 102</p>
-<p>　　可以看到，因为raid10对于一个写操作，只发生<code>2次io</code>，所以，同样的压力，同样的磁盘，每个盘的<code>iops只有102个</code>，还远远低于磁盘的极限<code>iops</code>。</p>
-<p>在一个实际的case中，一个恢复压力很大的standby(这里主要是写，而且是小io的写)，采用了raid5的方案，发现性能很差，通过分析，每个磁盘的iops在高峰时期，快达到200了，导致响应速度巨慢无比。后来改造成raid10，就避免了这个性能问题，每个磁盘的iops降到100左右。</p>
-<h3 id="服务器硬盘检测工具：">服务器硬盘检测工具：</h3><ul>
-<li>fio</li>
-</ul>
-<h2 id="fio">fio</h2><p>FIO是测试IOPS的非常好的工具，用来对硬件进行压力测试和验证，支持13种不同的I/O引擎，包括:sync,mmap, libaio, posixaio, SG v3, splice, null, network, syslet, guasi, solarisaio 等等。</p>
-<p>2、FIO的用法：</p>
-<p>FIO分顺序读，随机读，顺序写，随机写，混合随机读写模式。</p>
-<p>这是一个顺序读的模式：<br><figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fio <span class="variable">-filename=</span>/dev/sda <span class="variable">-direct=</span><span class="number">1</span> -iodepth <span class="number">1</span> -thread <span class="variable">-rw=</span>read <span class="variable">-ioengine=</span>psync <span class="variable">-bs=</span><span class="number">16</span>k <span class="variable">-size=</span><span class="number">200</span>G <span class="variable">-numjobs=</span><span class="number">30</span> <span class="variable">-runtime=</span><span class="number">1000</span> -group_reporting <span class="variable">-name=</span>mytest</span><br></pre></td></tr></table></figure></p>
-<p>说明：<br><code>filename=/dev/sdb1</code>                   测试文件名称，通常选择需要测试的盘的data目录。filename=/var/data01/test_io 测试过程使用的文件，一般指向一个不存在的文件，fio会以随机的数据生成这个文件。也可以直接指向块设备文件。<br><code>direct=1</code>                                     测试过程绕过机器自带的buffer。使测试结果更真实。<br><code>rw=randwrite</code>                            测试随机写的I/O<br><code>rw=randrw</code>                                 测试随机写和读的I/O<br><code>bs=16k</code>                                      单次io的块文件大小为16k<br><code>bsrange=512-2048</code>                      同上，提定数据块的大小范围<br><code>size=5G</code>                                       本次的测试文件大小为5g，以每次4k的io进行测试。<br><code>numjobs=30</code>                               本次的测试线程为30个.<br><code>runtime=1000</code>                             测试时间为1000秒，如果不写则一直将5g文件分4k每次写完为止。<br><code>ioengine=psync</code>                            io引擎使用pync方式<br><code>rwmixwrite=30</code>                            在混合读写的模式下，写占30%<br><code>group_reporting</code>                           关于显示结果的，汇总每个进程的信息。</p>
-<p><code>lockmem=1G</code>                                只使用1g内存进行测试。<br><code>zero_buffers</code>                                 用0初始化系统buffer。<br><code>nrfiles=8</code>                                    每个进程生成文件的数量。</p>
-<p>所以，随机读：<br><figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fio <span class="variable">-filename=</span>/dev/sda <span class="variable">-direct=</span><span class="number">1</span> -iodepth <span class="number">1</span> -thread <span class="variable">-rw=</span>randread <span class="variable">-ioengine=</span>psync <span class="variable">-bs=</span><span class="number">16</span>k <span class="variable">-size=</span><span class="number">200</span>G <span class="variable">-numjobs=</span><span class="number">30</span> <span class="variable">-runtime=</span><span class="number">1000</span> -group_reporting <span class="variable">-name=</span>mytest</span><br></pre></td></tr></table></figure></p>
-<p>顺序写：<br><figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fio <span class="variable">-filename=</span>/dev/sda <span class="variable">-direct=</span><span class="number">1</span> -iodepth <span class="number">1</span> -thread <span class="variable">-rw=</span>write <span class="variable">-ioengine=</span>psync <span class="variable">-bs=</span><span class="number">16</span>k <span class="variable">-size=</span><span class="number">200</span>G <span class="variable">-numjobs=</span><span class="number">30</span> <span class="variable">-runtime=</span><span class="number">1000</span> -group_reporting <span class="variable">-name=</span>mytest</span><br></pre></td></tr></table></figure></p>
-<p>随机写：<br><figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fio <span class="variable">-filename=</span>/dev/sda <span class="variable">-direct=</span><span class="number">1</span> -iodepth <span class="number">1</span> -thread <span class="variable">-rw=</span>randwrite <span class="variable">-ioengine=</span>psync <span class="variable">-bs=</span><span class="number">16</span>k <span class="variable">-size=</span><span class="number">200</span>G <span class="variable">-numjobs=</span><span class="number">30</span> <span class="variable">-runtime=</span><span class="number">1000</span> -group_reporting <span class="variable">-name=</span>mytest</span><br></pre></td></tr></table></figure></p>
-<p>混合随机读写：<br><figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fio <span class="variable">-filename=</span>/dev/sda <span class="variable">-direct=</span><span class="number">1</span> -iodepth <span class="number">1</span> -thread <span class="variable">-rw=</span>randrw <span class="variable">-rwmixread=</span><span class="number">70</span> <span class="variable">-ioengine=</span>psync <span class="variable">-bs=</span><span class="number">16</span>k <span class="variable">-size=</span><span class="number">200</span>G <span class="variable">-numjobs=</span><span class="number">30</span> <span class="variable">-runtime=</span><span class="number">100</span> -group_reporting <span class="variable">-name=</span>mytest <span class="variable">-ioscheduler=</span>noop</span><br></pre></td></tr></table></figure></p>
-<h3 id="案例">案例</h3><figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost ~]<span class="comment"># fio -filename=/dev/sdb1 -direct=1 -iodepth 1 -thread -rw=randrw -rwmixread=70 -ioengine=psync -bs=16k -size=200G -numjobs=30</span></span><br><span class="line"><span class="variable">-runtime=</span><span class="number">100</span> -group_reporting <span class="variable">-name=</span>mytest1</span><br><span class="line"></span><br><span class="line">mytest1: (<span class="variable">g=</span><span class="number">0</span>): <span class="variable">rw=</span>randrw, <span class="variable">bs=</span><span class="number">16</span>K-<span class="number">16</span>K/<span class="number">16</span>K-<span class="number">16</span>K, <span class="variable">ioengine=</span>psync, <span class="variable">iodepth=</span><span class="number">1</span></span><br><span class="line">...</span><br><span class="line">mytest1: (<span class="variable">g=</span><span class="number">0</span>): <span class="variable">rw=</span>randrw, <span class="variable">bs=</span><span class="number">16</span>K-<span class="number">16</span>K/<span class="number">16</span>K-<span class="number">16</span>K, <span class="variable">ioengine=</span>psync, <span class="variable">iodepth=</span><span class="number">1</span></span><br><span class="line">fio <span class="number">2.0</span>.<span class="number">7</span></span><br><span class="line">Starting <span class="number">30</span> threads</span><br><span class="line">Jobs: <span class="number">1</span> (<span class="variable">f=</span><span class="number">1</span>): [________________m_____________] [<span class="number">3.5</span>% done] [<span class="number">6935</span>K/<span class="number">3116</span>K /s] [<span class="number">423</span> /<span class="number">190</span> iops] [eta <span class="number">48</span>m:<span class="number">20</span>s] s]</span><br><span class="line">mytest1: (<span class="variable">groupid=</span><span class="number">0</span>, <span class="variable">jobs=</span><span class="number">30</span>): <span class="variable">err=</span> <span class="number">0</span>: <span class="variable">pid=</span><span class="number">23802</span></span><br><span class="line">**read** : <span class="variable">io=</span><span class="number">1853.4</span>MB, **<span class="variable">bw=</span><span class="number">18967</span>KB/s**, **<span class="variable">iops=</span><span class="number">1185</span>** , <span class="variable">runt=</span><span class="number">100058</span>msec</span><br><span class="line">clat (usec): <span class="variable">min=</span><span class="number">60</span> , <span class="variable">max=</span><span class="number">871116</span> , <span class="variable">avg=</span><span class="number">25227.91</span>, <span class="variable">stdev=</span><span class="number">31653.46</span></span><br><span class="line">lat (usec): <span class="variable">min=</span><span class="number">60</span> , <span class="variable">max=</span><span class="number">871117</span> , <span class="variable">avg=</span><span class="number">25228.08</span>, <span class="variable">stdev=</span><span class="number">31653.46</span></span><br><span class="line">clat percentiles (msec):</span><br><span class="line">| <span class="number">1.00</span><span class="variable">th=</span>[ <span class="number">3</span>], <span class="number">5.00</span><span class="variable">th=</span>[ <span class="number">5</span>], <span class="number">10.00</span><span class="variable">th=</span>[ <span class="number">6</span>], <span class="number">20.00</span><span class="variable">th=</span>[ <span class="number">8</span>],</span><br><span class="line">| <span class="number">30.00</span><span class="variable">th=</span>[ <span class="number">10</span>], <span class="number">40.00</span><span class="variable">th=</span>[ <span class="number">12</span>], <span class="number">50.00</span><span class="variable">th=</span>[ <span class="number">15</span>], <span class="number">60.00</span><span class="variable">th=</span>[ <span class="number">19</span>],</span><br><span class="line">| <span class="number">70.00</span><span class="variable">th=</span>[ <span class="number">26</span>], <span class="number">80.00</span><span class="variable">th=</span>[ <span class="number">37</span>], <span class="number">90.00</span><span class="variable">th=</span>[ <span class="number">57</span>], <span class="number">95.00</span><span class="variable">th=</span>[ <span class="number">79</span>],</span><br><span class="line">| <span class="number">99.00</span><span class="variable">th=</span>[ <span class="number">151</span>], <span class="number">99.50</span><span class="variable">th=</span>[ <span class="number">202</span>], <span class="number">99.90</span><span class="variable">th=</span>[ <span class="number">338</span>], <span class="number">99.95</span><span class="variable">th=</span>[ <span class="number">383</span>],</span><br><span class="line">| <span class="number">99.99</span><span class="variable">th=</span>[ <span class="number">523</span>]</span><br><span class="line">bw (KB/s) : <span class="variable">min=</span> <span class="number">26</span>, <span class="variable">max=</span> <span class="number">1944</span>, <span class="variable">per=</span><span class="number">3.36</span>%, <span class="variable">avg=</span><span class="number">636.84</span>, <span class="variable">stdev=</span><span class="number">189.15</span></span><br><span class="line">**write**: <span class="variable">io=</span><span class="number">803600</span>KB, **<span class="variable">bw=</span><span class="number">8031.4</span>KB/s**, **<span class="variable">iops=</span><span class="number">501</span>** , <span class="variable">runt=</span><span class="number">100058</span>msec</span><br><span class="line">clat (usec): <span class="variable">min=</span><span class="number">52</span> , <span class="variable">max=</span><span class="number">9302</span> , <span class="variable">avg=</span><span class="number">146.25</span>, <span class="variable">stdev=</span><span class="number">299.17</span></span><br><span class="line">lat (usec): <span class="variable">min=</span><span class="number">52</span> , <span class="variable">max=</span><span class="number">9303</span> , <span class="variable">avg=</span><span class="number">147.19</span>, <span class="variable">stdev=</span><span class="number">299.17</span></span><br><span class="line">clat percentiles (usec):</span><br><span class="line">| <span class="number">1.00</span><span class="variable">th=</span>[ <span class="number">62</span>], <span class="number">5.00</span><span class="variable">th=</span>[ <span class="number">65</span>], <span class="number">10.00</span><span class="variable">th=</span>[ <span class="number">68</span>], <span class="number">20.00</span><span class="variable">th=</span>[ <span class="number">74</span>],</span><br><span class="line">| <span class="number">30.00</span><span class="variable">th=</span>[ <span class="number">84</span>], <span class="number">40.00</span><span class="variable">th=</span>[ <span class="number">87</span>], <span class="number">50.00</span><span class="variable">th=</span>[ <span class="number">89</span>], <span class="number">60.00</span><span class="variable">th=</span>[ <span class="number">90</span>],</span><br><span class="line">| <span class="number">70.00</span><span class="variable">th=</span>[ <span class="number">92</span>], <span class="number">80.00</span><span class="variable">th=</span>[ <span class="number">97</span>], <span class="number">90.00</span><span class="variable">th=</span>[ <span class="number">120</span>], <span class="number">95.00</span><span class="variable">th=</span>[ <span class="number">370</span>],</span><br><span class="line">| <span class="number">99.00</span><span class="variable">th=</span>[ <span class="number">1688</span>], <span class="number">99.50</span><span class="variable">th=</span>[ <span class="number">2128</span>], <span class="number">99.90</span><span class="variable">th=</span>[ <span class="number">3088</span>], <span class="number">99.95</span><span class="variable">th=</span>[ <span class="number">3696</span>],</span><br><span class="line">| <span class="number">99.99</span><span class="variable">th=</span>[ <span class="number">5216</span>]</span><br><span class="line">bw (KB/s) : <span class="variable">min=</span> <span class="number">20</span>, <span class="variable">max=</span> <span class="number">1117</span>, <span class="variable">per=</span><span class="number">3.37</span>%, <span class="variable">avg=</span><span class="number">270.27</span>, <span class="variable">stdev=</span><span class="number">133.27</span></span><br><span class="line">lat (usec) : <span class="number">100</span>=<span class="number">24.32</span>%, <span class="number">250</span>=<span class="number">3.83</span>%, <span class="number">500</span>=<span class="number">0.33</span>%, <span class="number">750</span>=<span class="number">0.28</span>%, <span class="number">1000</span>=<span class="number">0.27</span>%</span><br><span class="line">lat (msec) : <span class="number">2</span>=<span class="number">0.64</span>%, <span class="number">4</span>=<span class="number">3.08</span>%, <span class="number">10</span>=<span class="number">20.67</span>%, <span class="number">20</span>=<span class="number">19.90</span>%, <span class="number">50</span>=<span class="number">17.91</span>%</span><br><span class="line">lat (msec) : <span class="number">100</span>=<span class="number">6.87</span>%, <span class="number">250</span>=<span class="number">1.70</span>%, <span class="number">500</span>=<span class="number">0.19</span>%, <span class="number">750</span>=<span class="number">0.01</span>%, <span class="number">1000</span>=<span class="number">0.01</span>%</span><br><span class="line">cpu : <span class="variable">usr=</span><span class="number">1.70</span>%, <span class="variable">sys=</span><span class="number">2.41</span>%, <span class="variable">ctx=</span><span class="number">5237835</span>, <span class="variable">majf=</span><span class="number">0</span>, <span class="variable">minf=</span><span class="number">6344162</span></span><br><span class="line">IO depths : <span class="number">1</span>=<span class="number">100.0</span>%, <span class="number">2</span>=<span class="number">0.0</span>%, <span class="number">4</span>=<span class="number">0.0</span>%, <span class="number">8</span>=<span class="number">0.0</span>%, <span class="number">16</span>=<span class="number">0.0</span>%, <span class="number">32</span>=<span class="number">0.0</span>%, &gt;=<span class="number">64</span>=<span class="number">0.0</span>%</span><br><span class="line">submit : <span class="number">0</span>=<span class="number">0.0</span>%, <span class="number">4</span>=<span class="number">100.0</span>%, <span class="number">8</span>=<span class="number">0.0</span>%, <span class="number">16</span>=<span class="number">0.0</span>%, <span class="number">32</span>=<span class="number">0.0</span>%, <span class="number">64</span>=<span class="number">0.0</span>%, &gt;=<span class="number">64</span>=<span class="number">0.0</span>%</span><br><span class="line">complete : <span class="number">0</span>=<span class="number">0.0</span>%, <span class="number">4</span>=<span class="number">100.0</span>%, <span class="number">8</span>=<span class="number">0.0</span>%, <span class="number">16</span>=<span class="number">0.0</span>%, <span class="number">32</span>=<span class="number">0.0</span>%, <span class="number">64</span>=<span class="number">0.0</span>%, &gt;=<span class="number">64</span>=<span class="number">0.0</span>%</span><br><span class="line">issued : <span class="variable">total=</span><span class="variable">r=</span><span class="number">118612</span>/<span class="variable">w=</span><span class="number">50225</span>/<span class="variable">d=</span><span class="number">0</span>, <span class="variable">short=</span><span class="variable">r=</span><span class="number">0</span>/<span class="variable">w=</span><span class="number">0</span>/<span class="variable">d=</span><span class="number">0</span></span><br><span class="line">Run status group <span class="number">0</span> (all jobs):</span><br><span class="line">READ: <span class="variable">io=</span><span class="number">1853.4</span>MB, <span class="variable">aggrb=</span><span class="number">18966</span>KB/s, <span class="variable">minb=</span><span class="number">18966</span>KB/s, <span class="variable">maxb=</span><span class="number">18966</span>KB/s, <span class="variable">mint=</span><span class="number">100058</span>msec, <span class="variable">maxt=</span><span class="number">100058</span>msec</span><br><span class="line">WRITE: <span class="variable">io=</span><span class="number">803600</span>KB, <span class="variable">aggrb=</span><span class="number">8031</span>KB/s, <span class="variable">minb=</span><span class="number">8031</span>KB/s, <span class="variable">maxb=</span><span class="number">8031</span>KB/s, <span class="variable">mint=</span><span class="number">100058</span>msec, <span class="variable">maxt=</span><span class="number">100058</span>msec</span><br><span class="line">Disk stats (read/write):</span><br><span class="line">sdb: <span class="variable">ios=</span><span class="number">118610</span>/<span class="number">50224</span>, <span class="variable">merge=</span><span class="number">0</span>/<span class="number">0</span>, <span class="variable">ticks=</span><span class="number">2991317</span>/<span class="number">6860</span>, <span class="variable">in_queue=</span><span class="number">2998169</span>, <span class="variable">util=</span><span class="number">99.77</span>%</span><br></pre></td></tr></table></figure>
-<p>主要查看以上<strong> </strong>包含部分的iops(read/write)</p>
-<p><a href="http://nolinux.blog.51cto.com/4824967/1662942" target="_blank" rel="external">案例1</a></p>
-<h3 id="参考：">参考：</h3><p><a href="http://blog.csdn.net/yuesichiu/article/details/8722417" target="_blank" rel="external">fio详细介绍</a></p>
-
-	
 	</div>
-	
-  
-</div>
-	<a type="button" href="/2015/07/07/服务器硬盘测试相关/#more" class="btn btn-default more">阅读此文</a>
-</div>
 
-		
-			
-	
-	<!-- display as entry -->	
-		<h3 class="title">
-			<div class="date"> 2015-07-07 </div>
-			<div class="article-title"><a href="/2015/07/07/自动化运维/" >Python 多线程</a></div>						
-		</h3>
-	
-
-
-			<div class="entry">
-  <div class="row">
-  
-	<div class="col-md-12">
-	  
-	
-	  
-	
-	</div>
-	
-  
-</div>
-	<a type="button" href="/2015/07/07/自动化运维/#more" class="btn btn-default more">阅读此文</a>
-</div>
-
-		
-
-		</div>
-
-		<!-- pagination -->
-		<div>
-  		<center>
-		<div class="pagination">
+	<div>
+  	<center>
+	<div class="pagination">
 <ul class="pagination">
 	 
+		
+          <li class="prev disabled"><a><i class="fa fa-arrow-circle-o-left"></i>上一篇</a></li>
+        
+
+        <li><a href="/archives"><i class="fa fa-archive"></i>Archive</a></li>
+
+		
+		   <li class="next"><a href="/2015/07/07/服务器硬盘测试相关/" class="alignright next">下一篇<i class="fa fa-arrow-circle-o-right"></i></a></li>         
+        
+	
 </ul>
 </div>
 
-  		</center>
-		</div>
-
-		
-		
-	</div> <!-- col-md-9 -->
-
-	
-		<div class="col-md-3">
-	<div id="sidebar">
-	
-			<div class="form-group has-success has-feedback">
-  <form action="//google.com/search" method="get" accept-charset="utf-8" >
-    <input type="search" name="q" results="0" placeholder="搜索" class="form-control">
-    <input type="hidden" name="q" value="site:htop.me">	
-  </form>
-</div>
-
-		
-			
-	<div class="widget">
-		<h4>分类</h4>
-		<ul class="tag_box inline list-unstyled">
-		
-			<li><a href="/categories/Linux/">Linux<span>1</span></a></li>
-		
-			<li><a href="/categories/Python/">Python<span>1</span></a></li>
-		
-		</ul>
+    </center>
 	</div>
+	
+	<!-- comment -->
+	
+<section id="comment">
+  <h2 class="title">留言</h2>
 
-		
-			
-	<div class="widget">
-		<h4>标签云</h4>
-		<ul class="tag_box inline list-unstyled">		
-		
-			<li><a href="/tags/Python/">Python<span>1</span></a></li>
-		
-			<li><a href="/tags/rewrite/">rewrite<span>1</span></a></li>
-		
-			<li><a href="/tags/nginx/">nginx<span>1</span></a></li>
-		
-			<li><a href="/tags/iops/">iops<span>1</span></a></li>
-		
-			<li><a href="/tags/多线程/">多线程<span>1</span></a></li>
-		
-			<li><a href="/tags/fio/">fio<span>1</span></a></li>
-		
-		 
-		</ul>
+  
+  <!-- 多说评论框 start -->
+  	 <div class="ds-thread" data-thread-key="2015/07/10/rewrite简明教程/" data-title="rewrite简明教程" data-url="http://htop.me/2015/07/10/rewrite简明教程/">
+
+
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"jenguo"};
+    (function() {
+        var ds = document.createElement('script');
+        ds.type = 'text/javascript';ds.async = true;
+        ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+        ds.charset = 'UTF-8';
+        (document.getElementsByTagName('head')[0]
+         || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+    </script>
+<!-- 多说公共JS代码 end -->
+
+
+     </div>
+  
+</section>
+
+	
+	</div> <!-- col-md-9/col-md-12 -->
+	
+	
+		<div class="col-md-3"> 
+
+	<!-- date -->
+	
+	<div class="meta-widget">
+	<i class="fa fa-clock-o"></i>
+	2015-07-10 
 	</div>
+	
 
+	<!-- categories -->
+    
 
+	<!-- tags -->
+	
+	<div class="meta-widget">
+	<a data-toggle="collapse" data-target="#tags"><i class="fa fa-tags"></i></a>		  
+    <ul id="tags" class="tag_box list-unstyled collapse in">	  
+	    
+  <li><a href="/tags/nginx/">nginx<span>1</span></a></li> <li><a href="/tags/rewrite/">rewrite<span>1</span></a></li>
+    </ul>
+	</div>
 		
-			
-<div class="widget">
-  <h4>最新文章</h4>
-  <ul class="entry list-unstyled">
-    
-      <li>
-        <a href="/2015/07/10/rewrite简明教程/" ><i class="fa fa-file-o"></i>rewrite简明教程...</a>
-      </li>
-    
-      <li>
-        <a href="/2015/07/07/服务器硬盘测试相关/" ><i class="fa fa-file-o"></i>服务器硬盘测试相关...</a>
-      </li>
-    
-      <li>
-        <a href="/2015/07/07/自动化运维/" ><i class="fa fa-file-o"></i>Python 多线程...</a>
-      </li>
-    
-  </ul>
-</div>
 
-		
-			
-<div class="widget">
-	<h4>链接</h4>
-	<ul class="blogroll list-unstyled">
+	<!-- toc -->
+	<div class="meta-widget">
 	
-		<li><i class="fa fa-github"></i><a href="https://github.com/jenguo/" title="My Github." target="_blank"]);">My Github</a></li>
+	</div>
 	
-	</ul>
-</div>
-
-
-		
-	</div> <!-- sidebar -->
-</div> <!-- col-md-3 -->
+    <hr>
+	
+</div><!-- col-md-3 -->
 
 	
-	
-</div> <!-- row-fluid -->
+
+</div><!-- row -->
+
 	</div>
   </div>
   <div class="container-narrow">
