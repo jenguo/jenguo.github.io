@@ -115,8 +115,8 @@ var _hmt = _hmt || [];
 	
 	<!-- display as entry -->	
 		<h3 class="title">
-			<div class="date"> 2015-07-10 </div>
-			<div class="article-title"><a href="/2015/07/10/rewrite简明教程/" >rewrite简明教程</a></div>						
+			<div class="date"> 2015-07-11 </div>
+			<div class="article-title"><a href="/2015/07/11/percona-toolkit简单手册/" >percona-toolkit简单手册</a></div>						
 		</h3>
 	
 
@@ -127,174 +127,124 @@ var _hmt = _hmt || [];
 	<div class="col-md-12">
 	  
 	
-	  <h2 id="Nginx_rewrite基本语法">Nginx rewrite基本语法</h2><p> Nginx的rewrite语法其实很简单.用到的指令无非是这几个:</p>
+	  
+	
+	</div>
+	
+  
+</div>
+	<a type="button" href="/2015/07/11/percona-toolkit简单手册/#more" class="btn btn-default more">阅读此文</a>
+</div>
+
+		
+			
+	
+	<!-- display as entry -->	
+		<h3 class="title">
+			<div class="date"> 2015-07-10 </div>
+			<div class="article-title"><a href="/2015/07/10/MySQL复制/" >MySQL主从复制</a></div>						
+		</h3>
+	
+
+
+			<div class="entry">
+  <div class="row">
+  
+	<div class="col-md-12">
+	  
+	
+	  <h2 id="MySQL复制">MySQL复制</h2><p>MySQL复制支持单向，异步复制。通过一台主服务器将更新写入二进制日志文件，并维护文件的一个索引以跟踪日志循环。这些日志可以记录发送到从服务器的更新。当一个从服务器连接主服务器时，它通知主服务器从服务器在日志中读取的最后一次成功更新的位置。从服务器接收从那时起发生的任何更新，然后封锁并等待主服务器通知新的更新。MySQL主从复制是异步进行的。同步需要版本为5.5,使用google提供的插件来实现。</p>
+<p>MySQL主从复制操作很灵活既可以实现整个服务的级别的复制，也可以实现对某个库，甚至某个数据库中的指定的某个对象进行复制。</p>
+<h2 id="MySQL主从复制应用场景">MySQL主从复制应用场景</h2><ol>
+<li><p>提高性能。通过一(多)主多从的部署方案，将涉及数据写的操作放在Master端操作，而将数据读的操作分散到众多的Slave当中。降低了Master的负载，提高数据写入的响应效率；多台从服务器提供读，分担了请求，提高了读的效率。</p>
+</li>
+<li><p>数据安全。数据复制到Slave节点，即使Master宕机，Slave节点还保存着完整数据。</p>
+</li>
+<li><p>数据分析。将数据分析，放在slave上。</p>
+</li>
+</ol>
+<h2 id="主从复制的原理">主从复制的原理</h2><p>MySQL的Replication是一个异步的复制过程，从一个MySQL实例(Master)复制到另一台MySQL实例上。在Master和Slave之间复制的整个过程主要由3个线程完成，其中两个线程（SQL线程和IO线程）在Slave端，另外一个线程(IO线程)在Master端。</p>
+<p>要实现主从复制，首先要在Master端打开Binary Log功能。因为整个复制过程实际上就是Slave从Master上获取二进制日志，然后在自己身上完全按照产生的顺序一次执行日志中记录的各种操作的过程。</p>
+<p>复制的具体过程如下：</p>
+<p><img src="http://7xkabv.com1.z0.glb.clouddn.com/htop_mysql_replication.jpg" alt="MySQL主从复制原理图"></p>
+<ol>
+<li>Slave的IO线程连上Master，并请求日志文件指定位置(或从开始的日志)之后的日志的内容。</li>
+<li>Master接收到来自Slave的IO线程请求后，负责复制IO线程根据请求的信息读取指定日志之后的日志信息，返回给Slave端的IO线程。返回信息中除了日志所包含的信息，还包含了包括本次返回的信息在Master端的Binary Log文件的名称和位置。</li>
+<li>Slave的IO线程接受到信息后，将日志内容一次写入Slave端的Relay Log文件(mysql-relay-bin.xxxx)的末端，并将读取到的Master端的bin-log的文件和位置记录到master-info文件中，以便在下一次读取时能够清楚地告诉Master，下次从bin-log哪个位置开始往后的日志内容。</li>
+<li>Slave的SQL线程检测检测到Relay Log中更新内容后，会马上解析该Log文件中的内容，还原成在Master端真实执行时的可执行的SQL语句，并执行这些SQK语句。实际上Master和Slave执行同样的语句。</li>
+</ol>
+<h2 id="Binary_Log_记录方式">Binary Log 记录方式</h2><h3 id="Row_Level">Row Level</h3><p>Binary Log会记录成每一行数据被修改的形式，然后在Slave端再对相同的数据进行修改。</p>
+<p><strong>优点</strong>：在Row Level模式下，Binnary Log可以不记录执行的Query语句的上下文相关信息，只要记录哪一行修改了，修改成什么样子。Row Level会详细的记录下每一行数据的修改细节，而且不会出现某个特定情况下的存储过程，或Function，以及Trigger的调用和触发无法被正确复制问题。</p>
+<p><strong>缺点</strong>：产生大量的日志内容。</p>
+<h3 id="Statment_Level">Statment Level</h3><p>每一条会修改的SQL语句都会记录到Master的Binnary中。Slave端在复制的时候，SQL线程会解析成和原来Master端执行过相同的SQL语句，并再次执行。</p>
+<p><strong>优点</strong>：首先，解决了Row Level下的缺点，不须要记录每一行的数据变化，减少了Binnary Log日志量，节约了IO成本，提高了性能。</p>
+<p><strong>缺点</strong>：由于它是记录的执行语句，为了让这些语句在Slave端也能正确执行。那么它还必须记录每条语句在执行时的一些相关信息，即上下文信息，以保证所有语句在Slave端被执行的时候能够得到和在Master端执行时相同的结果。另外，由于MySQL发展比较快，很多新功能不断加入，使得MySQL复制遇到了不小的挑战，复制时设计的内容岳父在，越容易出bug。在Statement Level下，目前已发现不少的情况下会造成MySQL的复制问题。主要是在修改数据使用了某些特定的函数货功能后，出现，比如：Sleep()函数在有些版本中就不能正确的复制，在存储过程中使用了last_insert_id()函数，可能会使Slave和Master的到不一致的ID，等等。</p>
+<h3 id="Mixed_Level">Mixed Level</h3><p>在Mixed模式下，MySQL会根据执行的每一条具体的SQL语句来区分对待记录的日志形式，也就是在Statement和Row之间选择一种。除了MySQL认为通过Statement方式可能造成复制过程中Master和Slave之间产生不一致数据。(如特殊Procedure和Funtion的使用，UUID()函数的使用等特殊情况)时，它会选择ROW的模式来记录变更之外，都会使用Statement方式。</p>
+<h2 id="设置主从">设置主从</h2><p>主从设置的主要步骤是</p>
+<ol>
+<li>修改Master和Slave的my.cnf中的server-id，使之唯一,开启binlog。</li>
+<li>若不停Master时，加入全局锁，记录bin-log文件和bin-log文件的位置，全备要同步的数据库；解除全局锁</li>
+<li>若可以停库时，停止主库，物理备份所需要同步的数据库。</li>
+<li>在Slave端恢复备份的数据。</li>
+<li>用<code>change master</code>在Slave建立与master的联系。</li>
+<li>启动Slave。</li>
+<li>检查Slave的状态。</li>
+</ol>
+<h3 id="实例">实例</h3><ol>
+<li>不停主库的建立主从复制。</li>
+</ol>
+<p><strong>第一部分 对主库的操作</strong></p>
 <ul>
-<li><strong>set</strong></li>
-<li><strong>if</strong></li>
-<li><strong>return</strong></li>
-<li><strong>break</strong></li>
-<li><strong>rewrite</strong></li>
+<li>1、修改主库的文件，开启MySQL的<code>bin-log</code>。（一般安装的时候最好先做好，这样可以不停库。）<br>修改主库的配置文件my.cnf：</li>
 </ul>
-<p>只是简单的几个指令却可以做出绝对不输apache的简单灵活的配置.</p>
-<h2 id="1-_set">　<strong> 1. set </strong></h2><p>set主要是用来设置变量用的,没什么特别的</p>
-<h2 id="2-_if"><strong>2. if</strong></h2><p>   if主要用来判断一些在rewrite语句中无法直接匹配的条件,比如检测文件存在与否,http header,cookie等,</p>
-<p><strong>用法:</strong> <code>if(条件) {…}</code><br>&gt;</p>
-<ol>
-<li>当if表达式中的条件为true,则执行if块中的语句</li>
-<li>当表达式只是一个变量时,如果值为空或者任何以0开头的字符串都会当作false</li>
-<li>直接比较内容时,使用 <code>= 和 !=</code></li>
-<li>使用正则表达式匹配时,使用<br>4.1<code>~</code>区分大小写<br>4.2  <code>~*</code>不区分大小写<br>4.3 <code>!~</code>区分大小写的不匹配<br>4.4 <code>!~*</code> 不区分大小写的不匹配</li>
-</ol>
-<p>这几句话看起来有点绕,总之记住:<strong><code>~</code>为正则匹配, 后置<code>*</code>为大小写不敏感, 前置<code>!</code>为”非”操作</strong></p>
-<p>nginx使用花括号<code>{}</code>判断区块,所以当正则中包含花括号时,则必须用双引号将正则包起来.对下面讲到的rewrite语句中的正则亦是如此.</p>
-<p>比如<code>“\d{4}\d{2}\.+”</code><br>&gt;<br><code>-</code>   使用<code>-f,-d,-e,-x</code>检测文件和目录<br><code>-f</code>  检测文件存在<br><code>-d</code>  检测目录存在<br><code>-e</code>  检测文件,目录或者符号链接存在<br><code>-x</code>  检测文件可执行</p>
-<p>跟~类似,前置<code>!</code>则为<code>”非”</code>操作</p>
-<h3 id="举例">举例</h3><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="variable">$http_user_agent</span> ~ <span class="constant">MSIE</span>) &#123;</span><br><span class="line">    rewrite ^(.*)<span class="variable">$ </span>/msie/<span class="variable">$1</span> <span class="keyword">break</span>;</span><br><span class="line">&#125;</span><br><span class="line">/<span class="regexp">/如果UA包含”MSIE”,rewrite 请求到/msie</span>目录下</span><br></pre></td></tr></table></figure>
-<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="label">$http_cookie</span> ~* <span class="string">"id=([^;] +)(?:;|$)"</span> ) &#123;</span><br><span class="line">   <span class="keyword">set</span> <span class="label">$id</span> <span class="label">$1</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//如果cookie匹配正则,设置变量$id等于正则引用部分</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (<span class="label">$request_method</span> = <span class="keyword">POST</span> ) &#123;</span><br><span class="line">    <span class="keyword">return</span> 405;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//如果提交方法为POST,则返回状态405 (Method not allowed)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (!-f <span class="label">$request_filename</span>) &#123;</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">    proxy_pass http:<span class="comment">//127.0.0.1;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//如果请求文件名不存在,则反向代理localhost</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (<span class="label">$args</span> ~ <span class="keyword">post</span>=140)&#123;</span><br><span class="line">    rewrite ^ http:<span class="comment">//example.com/ permanent;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//如果query string中包含”post=140″,永久重定向到example.com</span></span><br></pre></td></tr></table></figure>
-<h2 id="3-_return">3.  return</h2><blockquote>
-<p>return可用来直接设置HTTP返回状态,比如403,404等(301,302不可用return返回,这个下面会在rewrite提到)</p>
-</blockquote>
-<h2 id="4-_break">4. break</h2><blockquote>
-<p>立即停止rewrite检测,跟下面讲到的rewrite的break flag功能是一样的,区别在于前者是一个语句,后者是rewrite语句的flag</p>
-</blockquote>
-<h2 id="5-rewrite">5.rewrite</h2><pre><code>最核心的功能<span class="comment">(废话)</span>
-</code></pre><p><strong>用法: rewrite [正则]  [替换]  标志位</strong></p>
-<h3 id="其中标志位有四种">其中标志位有四种</h3><p>  <code>break</code> – 停止rewrite检测,也就是说当含有break flag的rewrite语句被执行时,该语句就是rewrite的最终结果</p>
-<p><code>last</code>– 停止rewrite检测,但是跟break有本质的不同,last的语句不一定是最终结果,这点后面会跟nginx的location匹配一起提到</p>
-<p><code>redirect</code>– 返回302临时重定向,一般用于重定向到完整的URL(包含http:部分)</p>
-<p><code>permanent</code>– 返回301永久重定向,一般用于重定向到完整的URL(包含http:部分)</p>
-<blockquote>
-<p>因为301和302不能简单的只单纯返回状态码,还必须有重定向的URL,这就是return指令无法返回301,302的原因了. 作为替换,rewrite可以更灵活的使用redirect和permanent标志实现301和302. 比如上一篇日志中提到的Blog搬家要做的域名重定向,在nginx中就会这么写</p>
-</blockquote>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">rewrite</span><span class="regexp"> ^(.*)$</span> <span class="url">http://newdomain.com/</span> <span class="built_in">permanent</span>;</span><br></pre></td></tr></table></figure>
-<h3 id="举例来说一下rewrite的实际应用">举例来说一下rewrite的实际应用</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">rewrite</span><span class="regexp"> ^(/download/.*)/media/(.*)\..*$</span> <span class="variable">$1</span>/mp3/<span class="variable">$2</span>.mp3 <span class="built_in">last</span>;</span><br></pre></td></tr></table></figure>
-<p>如果请求为<code>/download/eva/media/op1.mp3</code>则请求被rewrite到 <code>/download/eva/mp3/op1.mp3</code></p>
-<h3 id="使用起来就是这样,很简单不是么?_不过要注意的是rewrite有很多潜规则需要注意">使用起来就是这样,很简单不是么? 不过要注意的是rewrite有很多潜规则需要注意</h3><ul>
-<li><code>rewrite</code>的生效区块为<code>sever, location, if</code><br>rewrite只对相对路径进行匹配,不包含hostname 比如说以上面301重定向的例子说明<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">rewrite</span> ~* <span class="tag">cafeneko</span>\<span class="class">.info</span> <span class="rule"><span class="attribute">http</span>:<span class="value">//newdomain.com/ permanent</span></span>;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>这句是永远无法执行的,以这个URL为例<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://blog.cafeneko.info/<span class="number">2010</span>/<span class="number">10</span>/neokoseseiki_<span class="keyword">in</span>_new_home/?utm_<span class="built_in">source</span>=rss&amp;utm_medium=rss&amp;utm_campaign=neokoseseiki_<span class="keyword">in</span>_new_home</span><br></pre></td></tr></table></figure></p>
-<p>其中<code>cafeneko.info</code>叫做<code>hostname</code>,再往后到<code>?</code>为止叫做相对路径,<code>?</code>后面的一串叫做<code>query string</code></p>
-<blockquote>
-<p>对于rewrite来说,其正则表达式仅对<code>”/2010/10/neokoseseiki_in_new_home”</code>这一部分进行匹配,<strong>即不包含hostname,也不包含query string</strong> .所以除非相对路径中包含跟域名一样的string,否则是不会匹配的. 如果非要做域名匹配的话就要使用if语句了,比如进行去www跳转<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">if</span> (<span class="variable">$host</span> <span class="regexp">~* ^www\.(cafeneko\.info))</span> &#123;</span><br><span class="line">    <span class="title">set</span> <span class="variable">$host_without_www</span> <span class="variable">$1</span>;</span><br><span class="line">    <span class="title">rewrite</span><span class="regexp"> ^(.*)$</span> <span class="url">http://<span class="variable">$host_without_www</span><span class="variable">$1</span></span> <span class="built_in">permanent</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-</blockquote>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">vim  /etc/<span class="keyword">my</span>.cnf</span><br><span class="line"></span><br><span class="line">server-<span class="property">id</span> = <span class="number">1</span>         <span class="comment"># 设置server-id 确保id为唯一，最好用ip地址，后三位</span></span><br><span class="line">bin-<span class="command">log</span>=mysql-bin    <span class="comment"># 设置 bin-log，这地方可以指定为bin-log的目录？</span></span><br><span class="line"></span><br><span class="line">/etc/init.d/mysqld restart</span><br></pre></td></tr></table></figure>
+<p>修改完成后，重启mysql</p>
 <ul>
-<li><p>使用相对路径rewrite时,会根据<code>HTTP header</code>中的HOST跟nginx的server_name匹配后进行rewrite,如果<code>HOST不匹配</code>或者<code>没有HOST信息</code>的话则rewrite到server_name设置的第一个域名,如果没有设置server_name的话,会使用本机的localhost进行rewrite</p>
+<li><p>2、登录主库，添加从库的同步账号。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mysql –uroot –p</span><br><span class="line"><span class="operator"><span class="keyword">grant</span> replication <span class="keyword">slave</span> <span class="keyword">on</span> *.* <span class="keyword">to</span> <span class="string">'rep'</span>@<span class="string">'%'</span> <span class="keyword">identified</span> <span class="keyword">by</span> <span class="string">'passwd'</span>;</span></span><br></pre></td></tr></table></figure>
 </li>
-<li><p>前面提到过,rewrite的正则是不匹配query string的,所以默认情况下,query string是自动追加到rewrite后的地址上的,如果不想自动追加query string,则在rewrite地址的末尾添加?</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">rewrite</span><span class="regexp"> ^/users/(.*)$</span> /show?user=<span class="variable">$1</span>? <span class="built_in">last</span>;</span><br></pre></td></tr></table></figure>
+<li><p>3、对主库进行锁表操作，禁止更新，（为了防止备份时的数据不一致问题）。并查看bin-log的名字和日志的（position）。</p>
 </li>
 </ul>
-<p>rewrite的基本知识就是这么多..但还没有完..还有最头疼的部分没有说…</p>
-<h2 id="Nginx_location_和_rewrite_retry">Nginx location 和 rewrite retry</h2><p>nginx的rewrite有个很奇特的特性 — <code>rewrite后的url会再次进行rewrite检查,最多重试10次,10次后还没有终止的话就会返回HTTP 500</code></p>
-<p>用过nginx的朋友都知道<code>location</code>区块,<code>location区块</code>有点像Apache中的<code>RewriteBase</code>,但对于nginx来说location是控制的级别而已,里面的内容不仅仅是rewrite.</p>
-<p>这里必须稍微先讲一点location的知识.location是nginx用来处理对同一个server不同的请求地址使用独立的配置的方式</p>
-<h3 id="举例:">举例:</h3><figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">location <span class="subst">=</span> <span class="subst">/</span> &#123;</span><br><span class="line">    <span class="attribute">...</span><span class="built_in">.</span>配置A</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">location <span class="subst">/</span> &#123;</span><br><span class="line">    <span class="attribute">...</span><span class="built_in">.</span>配置B</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">location ^~ /images<span class="subst">/</span> &#123;</span><br><span class="line">    <span class="attribute">...</span><span class="built_in">.</span>配置C</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">location ~<span class="subst">*</span> <span class="subst">\</span><span class="built_in">.</span>(gif<span class="subst">|</span>jpg<span class="subst">|</span>jpeg)$ &#123;</span><br><span class="line">    <span class="attribute">...</span><span class="built_in">.</span>配置D</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<ol>
-<li>访问 / 会使用配置A</li>
-<li>访问 /documents/document.html 会使用配置B</li>
-<li>访问 /images/1.gif 会使用配置C</li>
-<li>访问 /documents/1.jpg 会使用配置D</li>
-</ol>
-<p>-<br>如何判断命中哪个location暂且按下不婊, 我们在实战篇再回头来看这个问题.</p>
-<h3 id="现在我们只需要明白一个情况:_nginx可以有多个location并使用不同的配-">现在我们只需要明白一个情况: nginx可以有多个location并使用不同的配.</h3><p>在sever区块中：<br>&gt;<br>1, 如果有包含rewrite规则,则会最先执行,而且只会执行一次,<br>2, 然后再判断命中哪个location的配置,再去执行该location中的rewrite,<br>3, 当该location中的rewrite执行完毕时,rewrite并不会停止,而是根据rewrite过的URL再次判断location并执行其中的配置.<br>4, 那么,这里就存在一个问题,如果rewrite写的不正确的话,是会在location区块间造成无限循环的.所以nginx才会加一个最多重试10次的上限. 比如这个</p>
-<h3 id="例子">例子</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">location</span> /download/ &#123;</span><br><span class="line">   <span class="title">rewrite</span><span class="regexp"> ^(/download/.*)/media/(.*)\..*$</span> <span class="variable">$1</span>/mp3/<span class="variable">$2</span>.mp3 <span class="built_in">last</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>如果请求为<code>/download/eva/media/op1.mp3</code> 则请求被rewrite到 <code>/download/eva/mp3/op1.mp3</code></p>
-<p>结果rewrite的结果重新命中了<code>location /download/</code> 虽然这次并没有命中rewrite规则的正则表达式,但因为缺少终止rewrite的标志,其仍会不停重试download中rewrite规则直到达到10次上限返回HTTP 500</p>
-<p><strong><em>认真的朋友这时就会问了,上面的rewrite规则不是有标志位last么? last不是终止rewrite的意思么?</em></strong></p>
-<p>说到这里我就要抱怨下了,网上能找到关于nginx rewrite的文章中80%对last标志的解释都是</p>
-<p><code>last</code> – 基本上都用这个Flag</p>
-<p>……这他妈坑爹呢!!! 什么叫基本上都用? 什么是不基本的情况? =皿=</p>
-<p>有兴趣的可以放狗”基本上都用这个Flag”…</p>
-<p><strong>我最终还是在stack overflow找到了答案:</strong></p>
-<p><strong><em>last和break最大的不同在于</em></strong><br><code>- break</code>是终止当前location的rewrite检测,而且不再进行location匹配<br><code>– last</code>是终止当前location的rewrite检测,但会继续重试location匹配并处理区块中的rewrite规则</p>
-<p>还是这个该死的例子<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">location</span> /download/ &#123;</span><br><span class="line">    <span class="title">rewrite</span><span class="regexp"> ^(/download/.*)/media/(.*)\..*$</span> <span class="variable">$1</span>/mp3/<span class="variable">$2</span>.mp3 ;</span><br><span class="line">    <span class="title">rewrite</span><span class="regexp"> ^(/download/.*)/movie/(.*)\..*$</span> <span class="variable">$1</span>/avi/<span class="variable">$2</span>.mp3 ;</span><br><span class="line">    <span class="title">rewrite</span><span class="regexp"> ^(/download/.*)/avvvv/(.*)\..*$</span> <span class="variable">$1</span>/rmvb/<span class="variable">$2</span>.mp3 ;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>上面没有写标志位,请各位自行脑补…</p>
-<p>如果请求为 <code>/download/acg/moive/UBW.avi</code></p>
-<p><strong>last</strong>的情况是: 在第2行rewrite处终止,并重试location /download..死循环</p>
-<p><strong>break</strong>的情况是: 在第2行rewrite处终止,其结果为最终的rewrite地址.</p>
-<p>也就是说,上面的某位试图下载eva op不但没下到反而被HTTP 500射了一脸的例子正是因为用了last标志所以才会造成死循环,如果用break就没事了.<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">location</span> /download/ &#123;</span><br><span class="line"></span><br><span class="line">   <span class="title">rewrite</span><span class="regexp"> ^(/download/.*)/media/(.*)\..*$</span> <span class="variable">$1</span>/mp3/<span class="variable">$2</span>.mp3 <span class="built_in">break</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<blockquote>
-<p>对于这个问题,我个人的建议是,如果是全局性质的rewrite,最好放在server区块中并减少不必要的location区块.location区块中的rewrite要想清楚是用last还是break.</p>
-</blockquote>
-<p>有些情况是要用last的. 典型的例子就是wordpress的permalink rewrite</p>
-<p>常见的情况下, wordpress的rewrite是放在location /下面,并将请求rewrite到/index.php</p>
-<p>这时如果这里使用break乃就挂了,不信试试. ｂ（￣▽￣）ｄ…因为nginx返回的是没有解释的index.php的源码…</p>
-<p>这里一定要使用last才可以在结束<code>location /`` 的rewrite, 并再次命中</code>location ~ .php$`,将其交给fastcgi进行解释.其后返回给浏览器的才是解释过的html代码.</p>
-<p>关于nginx rewrite的简介到这里就全部讲完了,水平及其有限,请大家指出错漏…</p>
-<h3 id="3_实战!_WordPress的Permalink+Supercache_rewrite实现">3 实战! WordPress的Permalink+Supercache rewrite实现</h3><p>这个rewrite写法其实是来自supercache作者本家的某个评论中,网上很容易查到,做了一些修改. 先给出该配置文件的全部内容..部分内容码掉了..绝对路径什么的你知道也没啥用对吧?<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">  listen <span class="number">80</span>;</span><br><span class="line">  server_name cafeneko.info www.cafeneko.info;</span><br><span class="line">  access_<span class="built_in">log</span> ***;</span><br><span class="line">  error_<span class="built_in">log</span> *** ;</span><br><span class="line">  root ***;</span><br><span class="line">  index index.php;</span><br><span class="line">  gzip_static on;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (<span class="operator">-f</span> <span class="variable">$request_filename</span>) &#123;</span><br><span class="line">      <span class="built_in">break</span>;</span><br><span class="line">   &#125;</span><br><span class="line">  <span class="built_in">set</span> <span class="variable">$supercache_file</span> <span class="string">''</span>;</span><br><span class="line">  <span class="built_in">set</span> <span class="variable">$supercache_uri</span> <span class="variable">$request_uri</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (<span class="variable">$request_method</span> = POST) &#123;</span><br><span class="line">    <span class="built_in">set</span> <span class="variable">$supercache_uri</span> <span class="string">''</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (<span class="variable">$query_string</span>) &#123;</span><br><span class="line">    <span class="built_in">set</span> <span class="variable">$supercache_uri</span> <span class="string">''</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (<span class="variable">$http_cookie</span> ~* <span class="string">"comment_author_|wordpress_logged_|wp-postpass_"</span> ) &#123;</span><br><span class="line">    <span class="built_in">set</span> <span class="variable">$supercache_uri</span> <span class="string">''</span>;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (<span class="variable">$supercache_uri</span> ~ ^(.+)$) &#123;</span><br><span class="line">    <span class="built_in">set</span> <span class="variable">$supercache_file</span> /wp-content/cache/supercache/<span class="variable">$http_host</span>/<span class="variable">$1index</span>.html;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (<span class="operator">-f</span> <span class="variable">$document_root</span><span class="variable">$supercache_file</span>) &#123;</span><br><span class="line">    rewrite ^(.*)$ <span class="variable">$supercache_file</span> <span class="built_in">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!<span class="operator">-e</span> <span class="variable">$request_filename</span>) &#123;</span><br><span class="line">    rewrite . /index.php last;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  location ~ \.php$ &#123;</span><br><span class="line">    fastcgi_pass <span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">9000</span>;</span><br><span class="line">    fastcgi_index index.php;</span><br><span class="line">    fastcgi_param SCRIPT_FILENAME ***<span class="variable">$fastcgi_script_name</span>;</span><br><span class="line">    include fastcgi_params;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  location ~ /\.ht &#123;</span><br><span class="line">    deny all;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>下面是解释:</p>
-<p><code>gzip_static on;</code></p>
-<p>如果浏览器支持gzip,则在压缩前先寻找是否存在压缩好的同名gz文件避免再次压缩浪费资源,配合supercache的压缩功能一起使用效果最好,相比supercache原生的Apache mod_rewrite实现,nginx的实现简单的多. Apache mod_rewrite足足用了两套看起来一模一样的条件判断来分别rewrite支持gzip压缩和不支持的情况.</p>
-<figure class="highlight tcl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (-f <span class="variable">$request_filename</span>) &#123;</span><br><span class="line">  <span class="keyword">break</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//如果是直接请求某个真实存在的文件,则用<span class="keyword">break</span>语句停止rewrite检查</span><br><span class="line"></span><br><span class="line"><span class="keyword">set</span> <span class="variable">$supercache_file</span> <span class="string">''</span>;</span><br><span class="line"><span class="keyword">set</span> <span class="variable">$supercache_uri</span> <span class="variable">$request_uri</span>;</span><br><span class="line">//用<span class="variable">$request_uri</span>初始化变量 <span class="variable">$supercache_uri</span>.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (<span class="variable">$request_method</span> = POST) &#123;</span><br><span class="line">  <span class="keyword">set</span> <span class="variable">$supercache_uri</span> <span class="string">''</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//如果请求方式为POST,则不使用supercache.这里用清空<span class="variable">$supercache_uri</span>的方法来跳过检测,下面会看到</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (<span class="variable">$query_string</span>) &#123;</span><br><span class="line">    <span class="keyword">set</span> <span class="variable">$supercache_uri</span> <span class="string">''</span>;</span><br><span class="line">&#125;</span><br><span class="line">//因为使用了rewrite的原因,正常情况下不应该有query_string(一般只有后台才会出现query <span class="keyword">string</span>),有的话则不使用supercache</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (<span class="variable">$http_cookie</span> ~* <span class="string">"comment_author_|wordpress_logged_|wp-postpass_"</span> ) &#123;</span><br><span class="line">    <span class="keyword">set</span> <span class="variable">$supercache_uri</span> <span class="string">''</span>;</span><br><span class="line">&#125;</span><br><span class="line">//默认情况下,supercache是仅对<span class="keyword">unknown</span> user使用的.</span><br></pre></td></tr></table></figure>
-<p>其他诸如登录用户或者评论过的用户则不使用.</p>
-<p><code>comment_author</code>是测试评论用户的cookie, wordpress_logged是测试登录用户的cookie. wp-postpass不大清楚,字面上来看可能是曾经发表过文章的?只要cookie中含有这些字符串则条件成立.</p>
-<p>原来的写法中检测登录用户cookie用的是wordpress<em>  ,但是我在测试中发现登入/登出以后还会有一个叫wordpress_test</em> cookie存在,<br>不知道是什么作用,我也不清楚一般用户是否会产生这个cookie.由于考虑到登出以后这个cookie依然存在可能会影响到cache的判断,于是把这里改成了匹配wordpress<em>logged</em><br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="variable">$supercache_uri</span> ~ ^(.+)$) &#123;</span><br><span class="line">  <span class="built_in">set</span> <span class="variable">$supercache_file</span> /wp-content/cache/supercache/<span class="variable">$http_host</span><span class="variable">$1index</span>.html;</span><br><span class="line">&#125;</span><br><span class="line">//如果变量<span class="variable">$supercache_uri</span>不为空,则设置cache file的路径</span><br></pre></td></tr></table></figure></p>
-<p>这里稍微留意下<code>$http_host$1index.html</code>这串东西,其实写成<code>` $http_host/$1/index.html</code> 就好懂很多</p>
-<p>以这个rewrite形式的url为例<br>    <code>cafeneko.info/2010/09/tsukihime-doujin_part01/</code><br>其中<br><code>$http_host = ‘cafeneko.info’</code> , <code>$1 =</code>  <code>$request_uri = ‘/2010/09/tsukihime-doujin_part01/’</code></p>
-<p>则 `$http_host$1index.html = ‘cafeneko.info/2010/09/tsukihime-doujin_part01/index.html’``</p>
-<p>而<code>$http_host/$1/index.html = ‘cafeneko.info//2010/09/tsukihime-doujin_part01//index.html’</code></p>
-<p>虽然在调试过程中两者并没有不同,不过为了保持正确的路径,还是省略了中间的/符号.<br>最后上例rewrite后的<code>url = ‘cafeneko.info/wp-content/cache/supercache/cafeneko.info/2010/09/tsukihime-doujin_part01/index.html’</code><br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="operator">-f</span> <span class="variable">$document_root</span><span class="variable">$supercache_file</span>) &#123;</span><br><span class="line">    rewrite ^(.*)$ <span class="variable">$supercache_file</span> <span class="built_in">break</span>;</span><br><span class="line">&#125;</span><br><span class="line">//检查cache文件是否存在,存在的话则执行rewrite,留意这里因为是rewrite到html静态文件,所以可以直接用<span class="built_in">break</span>终止掉.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (!<span class="operator">-e</span> <span class="variable">$request_filename</span>) &#123;</span><br><span class="line">    rewrite . /index.php last;</span><br><span class="line">&#125;</span><br><span class="line">//执行到此则说明不使用suercache,进行wordpress的permalink rewrite</span><br></pre></td></tr></table></figure></p>
-<p>检查请求的文件/目录是否存在,如果不存在则条件成立, rewrite到index.php</p>
-<p>顺便说一句,当时这里这句rewrite看的我百思不得其解. .</p>
-<p><strong><em>只能匹配一个字符啊?这是什么意思?</em></strong></p>
-<p>一般情况下,想调试nginx rewrite最简单的方法就是把flag写成redirect,这样就能在浏览器地址栏里看到真实的rewrite地址.</p>
-<p>然而对于permalink rewrite却不能用这种方法,因为一旦写成redirect以后,不管点什么链接,只要没有supercache,都是跳转回首页了.</p>
-<p>后来看了一些文章才明白了rewrite的本质,其实是在保持请求地址不变的情况下,在服务器端将请求转到特定的页面.</p>
-<p>乍一看supercache的性质有点像302到静态文件,所以可以用redirect调试.</p>
-<p>但是permalink却是性质完全不同的rewrite,这跟wordpress的处理方式有关. 我研究不深就不多说了,简单说就是保持URL不变将请求rewrite到index.php,WP将分析其URL结构再对其并进行匹配(文章,页面,tag等),然后再构建页面. 所以其实这条rewrite</p>
-<p><code>rewrite . /index.php last;</code></p>
-<p>说的是,任何请求都会被rewrite到index.php.因为”.”匹配任意字符,所以这条rewrite其实可以写成任何形式的能任意命中的正则.比如说<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">rewrite</span> . /index.php <span class="built_in">last</span>;</span><br><span class="line"><span class="title">rewrite</span><span class="regexp"> ^</span> /index.php <span class="built_in">last</span>;</span><br><span class="line"><span class="title">rewrite</span> .* /index.php <span class="built_in">last</span>;</span><br></pre></td></tr></table></figure></p>
-<p>效果都是一样的,都能做到permalink rewrite.</p>
-<p>最后要提的就是有人可能注意到我的rewrite规则是放在server块中的.网上能找到的大多数关于wordpress的nginx rewrite规则都是放在location /下面的,但是上面我却放在了server块中,为何?</p>
-<p>原因是WP或某个插件会在当前页面做一个POST的XHR请求,本来没什么特别,但问题就出在其XHR请求的URL结构上.</p>
-<p>正常的permalink一般为: <code>domain.com/year/month/postname/</code> 或者 <code>domain.com/tags/tagname/</code> 之类.</p>
-<p>但这个XHR请求的URL却是 <code>domain.com/year/month/postname/index.php</code> 或者 <code>domain.com/tags/tagname/index.php</code></p>
-<p>这样一来就命中了<code>location ~ \.php$</code>而交给fastcgi,但因为根本没有做过rewrite其页面不可能存在,结果就是这个XHR返回一个404</p>
-<p>鉴于location之间匹配优先级的原因,我将主要的rewrite功能全部放进了server区块中,这样就得以保证在进行location匹配之前是一定做过rewrite的.</p>
-<p>这时有朋友又要问了,为什么命中的是<code>location ~ \.php$</code>而不是`location / ?``</p>
-<h3 id="location匹配问题">location匹配问题</h3><p>locatoin并非像rewrite那样逐条执行,而是有着匹配优先级的,当一条请求同时满足几个location的匹配时,其只会选择其一的配置执行.</p>
-<p>其寻找的方法为:</p>
-<ol>
-<li><p>首先寻找所有的常量匹配,如location <code>/</code>, location <code>/av/</code>, 以相对路径自左向右匹配,匹配长度最高的会被使用,</p>
+<figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">flush  tables with read lock；</span><br><span class="line">show master status；</span><br><span class="line"></span><br><span class="line"><span class="header">mysql&gt; show master status;</span><br><span class="line">+------------------+----------+--------------+------------------+</span></span><br><span class="line"><span class="header">| File             | Position | Binlog_Do_DB | Binlog_Ignore_DB |</span><br><span class="line">+------------------+----------+--------------+------------------+</span></span><br><span class="line"><span class="header">| mysql-bin.000107 | 38874616 |              |                  |</span><br><span class="line">+------------------+----------+--------------+------------------+</span></span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt;</span><br></pre></td></tr></table></figure>
+<p>记录这两个值<br><code>mysql-bin.000107</code><br><code>38874616</code><br>取得<code>bin-log</code> 和 <code>position</code><br><figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql -uroot -p'yz11235' -<span class="keyword">e</span> <span class="string">"show master status"</span> | awk '&#123;<span class="keyword">if</span> (NR == 2)&#123; <span class="keyword">print</span> <span class="label">$1</span> <span class="string">"\n"</span> <span class="label">$2</span>;&#125;&#125;' &gt; temp.txt</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li><p>4、对主库进行全备份。</p>
+<figure class="highlight 1c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqldump  -h hostname -uroot -p’’ -A -B -F  <span class="string">| gzip &gt;alldb.sql.gz</span></span><br></pre></td></tr></table></figure>
 </li>
-<li><p>然后按照配置文件中出现的顺序依次测试正则表达式,如 <code>location ~ download\/$, location ~* \.wtf</code>, 第一个匹配会被使用</p>
+<li><p>5、导出数据库后，进行对数据库表解锁。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator"><span class="keyword">unlock</span> <span class="keyword">tables</span></span></span><br></pre></td></tr></table></figure>
 </li>
-<li><p>如果没有匹配的正则,则使用之前的常量匹配</p>
+</ul>
+<p><strong>第二部分 从库上操作</strong></p>
+<ul>
+<li><ol>
+<li>在从库上设置my.cnf，设置server-id，和注释bin-log。<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">server-<span class="property">id</span> = <span class="number">2</span></span><br><span class="line"><span class="comment"># bin-log = mysql-bin</span></span><br></pre></td></tr></table></figure>
 </li>
 </ol>
-<p>而下面几种方法当匹配时会立即终止其他location的尝试</p>
-<ol>
-<li><p><code>=</code>完全匹配,location = /download/</p>
 </li>
-<li><p>`^~`` 终止正则测试,如location ^~ /download/ 如果这条是最长匹配,则终止正则测试,这个符号只能匹配常量</p>
+</ul>
+<p>重启 mysql。</p>
+<ul>
+<li><p>2、登录从库，并设置从库信息</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator"><span class="keyword">CHANGE</span> <span class="keyword">MASTER</span> <span class="keyword">TO</span> </span><br><span class="line">MASTER_HOST=<span class="string">'10.143.39.174'</span>,</span><br><span class="line">MASTER_PORT=<span class="number">3306</span>,</span><br><span class="line">MASTER_USER=<span class="string">'rep'</span>,</span><br><span class="line">MASTER_PASSWORD=<span class="string">'passwd'</span>,</span><br><span class="line">MASTER_LOG_FILE=<span class="string">'mysql-bin.000003'</span>,</span><br><span class="line">MASTER_LOG_POS=<span class="number">151348020</span>,</span><br><span class="line">MASTER_CONNECT_RETRY=<span class="number">10</span>;</span></span><br></pre></td></tr></table></figure>
 </li>
-<li><p>在没有=或者^~的情况下,如果常量完全匹配,也会立即终止测试,比如请求为 /download/ 会完全命中location /download/而不继续其他的正则测试</p>
+<li><p>3、启动 从库</p>
 </li>
-</ol>
-<h3 id="总结:">总结:</h3><ol>
-<li><p>如果完全匹配(不管有没有=),尝试会立即终止</p>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator"><span class="keyword">start</span> <span class="keyword">slave</span></span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>4、查看从库状态，<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator"><span class="keyword">show</span> <span class="keyword">slave</span> <span class="keyword">status</span>\G</span></span><br></pre></td></tr></table></figure>
 </li>
-<li><p>以最长匹配测试各个常量,如果常量匹配并有 ^~, 尝试会终止</p>
-</li>
-<li><p>按在配置文件中出现的顺序测试各个正则表达式</p>
-</li>
-<li><p>如果第3步有命中,则使用其匹配location,否则使用第2步的location</p>
-</li>
-</ol>
-<p>另外还可以定义一种特殊的named location,以@开头,如location @thisissparta 不过这种location定义不用于一般的处理,而是专门用于try_file, error_page的处理,这里不再深入.</p>
-<p>晕了没? 用前文的例子来看看<br><figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">location <span class="subst">=</span> <span class="subst">/</span> &#123;</span><br><span class="line"><span class="attribute">...</span><span class="built_in">.</span>配置A</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">location <span class="subst">/</span> &#123;</span><br><span class="line"><span class="attribute">...</span><span class="built_in">.</span>配置B</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">location ^~ /images<span class="subst">/</span> &#123;</span><br><span class="line"><span class="attribute">...</span><span class="built_in">.</span>配置C</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">location ~<span class="subst">*</span> <span class="subst">\</span><span class="built_in">.</span>(gif<span class="subst">|</span>jpg<span class="subst">|</span>jpeg)$ &#123;</span><br><span class="line"><span class="attribute">...</span><span class="built_in">.</span>配置D</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>访问 / 会使用配置A -&gt; 完全命中</p>
-<p>访问 /documents/document.html 会使用配置B -&gt; 匹配常量B,不匹配正则C和D,所以用B</p>
-<p>访问 /images/1.gif 会使用配置C -&gt; 匹配常量B,匹配正则C,使用首个命中的正则,所以用C</p>
-<p>访问 /documents/1.jpg 会使用配置D -&gt; 匹配常量B,不匹配正则C,匹配正则D,使用首个命中的正则,所以用D</p>
+</ul>
+<p>观察：<code>slave_IO_Running : Yes</code><br>      <code>Slave_SQL_Running : Yes</code><br>以上两个为Yes 说明主从已经成功。<br><code>Second_behind_master = 0</code> 这是从库落后主库的秒数。</p>
 
 	
 	</div>
 	
   
 </div>
-	<a type="button" href="/2015/07/10/rewrite简明教程/#more" class="btn btn-default more">阅读此文</a>
+	<a type="button" href="/2015/07/10/MySQL复制/#more" class="btn btn-default more">阅读此文</a>
 </div>
 
 		
@@ -435,9 +385,9 @@ var _hmt = _hmt || [];
 		
 			<li><a href="/categories/Linux/">Linux<span>1</span></a></li>
 		
-			<li><a href="/categories/Python/">Python<span>1</span></a></li>
+			<li><a href="/categories/MySQL/">MySQL<span>1</span></a></li>
 		
-			<li><a href="/categories/WebServer/">WebServer<span>1</span></a></li>
+			<li><a href="/categories/Python/">Python<span>1</span></a></li>
 		
 		</ul>
 	</div>
@@ -448,17 +398,15 @@ var _hmt = _hmt || [];
 		<h4>标签云</h4>
 		<ul class="tag_box inline list-unstyled">		
 		
-			<li><a href="/tags/Python/">Python<span>1</span></a></li>
+			<li><a href="/tags/iops/">iops<span>1</span></a></li>
 		
-			<li><a href="/tags/rewrite/">rewrite<span>1</span></a></li>
-		
-			<li><a href="/tags/多线程/">多线程<span>1</span></a></li>
-		
-			<li><a href="/tags/nginx/">nginx<span>1</span></a></li>
+			<li><a href="/tags/MySQL/">MySQL<span>1</span></a></li>
 		
 			<li><a href="/tags/fio/">fio<span>1</span></a></li>
 		
-			<li><a href="/tags/iops/">iops<span>1</span></a></li>
+			<li><a href="/tags/多线程/">多线程<span>1</span></a></li>
+		
+			<li><a href="/tags/Python/">Python<span>1</span></a></li>
 		
 		 
 		</ul>
@@ -472,7 +420,11 @@ var _hmt = _hmt || [];
   <ul class="entry list-unstyled">
     
       <li>
-        <a href="/2015/07/10/rewrite简明教程/" ><i class="fa fa-file-o"></i>rewrite简明教程...</a>
+        <a href="/2015/07/11/percona-toolkit简单手册/" ><i class="fa fa-file-o"></i>percona-toolkit简单手册...</a>
+      </li>
+    
+      <li>
+        <a href="/2015/07/10/MySQL复制/" ><i class="fa fa-file-o"></i>MySQL主从复制...</a>
       </li>
     
       <li>
